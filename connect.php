@@ -1,62 +1,131 @@
 <?php
-// 1. Database Connection Credentials
-$servername = "mysql8"; // Replace with your server name
-$username = "root";  // Replace with your database username 
-$password = "my_perfect_password";  // Replace with your database password
-$database = "movies"; // Replace with the name of your database
-$port = 3306; // Replace with the port your database server is listening
+// 1. Credenziali di connessione al database
+$servername = "mysql8"; // Sostituisci con il nome del tuo server
+$username = "root";  // Sostituisci con il tuo nome utente del database
+$password = "my_perfect_password";  // Sostituisci con la tua password del database
+$database = "movies"; // Sostituisci con il nome del tuo database
+$port = 3306; // Sostituisci con la porta a cui il tuo server del database è in ascolto
 
 function get_movies($title){
-    
     global $servername, $username, $password, $database, $port;
 
-    // 1. Fetch results into an associative array
     $movies = array();
-    // 2. Create connection
-    // $conn = new mysqli($servername, $username, $password, $database, $port);
     $conn = mysqli_connect($servername, $username, $password, $database, $port);
 
-    // Check connection
     if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
+        die("Connessione fallita: " . $conn->connect_error);
     }
 
-    
-    $query = "select * from movie;";
-    
+    $query = "SELECT * FROM movie;";
     
     if(isset($title)){
-        $query = 'select * from movie where title like "%' . $title . '%" ';
+        $query = 'SELECT * FROM movie WHERE title LIKE "%' . $title . '%"';
     }
 
-    // 3. Execute the query
     $result = $conn->query($query);
 
-    // 4. Add an item to the $movies array
     while($row = $result->fetch_assoc()){
-        $movies[] = $row; // Add an item to the array
+        $movieId = $row['id'];
+
+        $actors_sql = "SELECT a.* FROM movie_actor ma INNER JOIN actor a ON ma.actor_id = a.id WHERE ma.movie_id = $movieId";
+
+        $actorResult = mysqli_query($conn, $actors_sql);
+        if (!$actorResult){
+            die("Errore durante il recupero degli attori dal film $movieId: " . mysqli_error($conn));
+        }
+
+        $actors = array();
+        while($actorRow = mysqli_fetch_assoc($actorResult)){
+            $actors[] = $actorRow;
+        }
+
+        $row["actors"] = $actors;
+        $movies[] = $row;
     }
-    /*
-    echo "<pre>";
-    print_r( $movies);
-    echo "</pre>";
-    */
-    // Close the connection
+
     $conn->close();
 
     return $movies;
 }
 
-function get_actors(){
+function get_actors($cognome){
+    global $servername, $username, $password, $database, $port;
 
-}
+    $actors = array();
+    $conn = mysqli_connect($servername, $username, $password, $database, $port);
 
-function get_directors(){
+    if ($conn->connect_error) {
+        die("Connessione fallita: " . $conn->connect_error);
+    }
 
-}
-
-function get_genres(){
+    $query = "SELECT * FROM actor;";
     
+    if(isset($cognome)){
+        $query = 'SELECT * FROM actor WHERE cognome LIKE "%' . $cognome . '%"';
+    }
+
+    $result = $conn->query($query);
+
+    while($row = $result->fetch_assoc()){
+        $actors[] = $row; 
+    }
+    
+    $conn->close();
+
+    return $actors;
 }
 
+function get_directors($cognome){
+    global $servername, $username, $password, $database, $port;
+
+    $directors = array();
+    $conn = mysqli_connect($servername, $username, $password, $database, $port);
+
+    if ($conn->connect_error) {
+        die("Connessione fallita: " . $conn->connect_error);
+    }
+
+    $query = "SELECT * FROM directors;";
+    
+    if(isset($cognome)){
+        $query = 'SELECT * FROM directors WHERE cognome LIKE "%' . $cognome . '%"';
+    }
+
+    $result = $conn->query($query);
+
+    while($row = $result->fetch_assoc()){
+        $directors[] = $row; 
+    }
+    
+    $conn->close();
+
+    return $directors;
+}
+
+function get_genres($nome){
+    global $servername, $username, $password, $database, $port;
+
+    $genres = array();
+    $conn = mysqli_connect($servername, $username, $password, $database, $port);
+
+    if ($conn->connect_error) {
+        die("Connessione fallita: " . $conn->connect_error);
+    }
+
+    $query = "SELECT * FROM genres;";
+    
+    if(isset($nome)){
+        $query = 'SELECT * FROM genres WHERE nome LIKE "%' . $nome . '%"';
+    }
+
+    $result = $conn->query($query);
+
+    while($row = $result->fetch_assoc()){
+        $genres[] = $row; 
+    }
+    
+    $conn->close();
+
+    return $genres;
+}
 ?>
